@@ -6,56 +6,56 @@ import time
 import cv2
 from pathlib import Path
 import torch
-from skvideo.io import FFmpegWriter, vreader
 from torchvision.transforms import Compose, Resize, ToPILImage, ToTensor
 from face_detector import FaceDetector
 from trainer import MaskDetectorTrainer
 
-print("[INFO] Loading model")
-fd_model = FaceDetector(
-        prototype='./checkpoints/deploy.prototxt.txt',
-        model='./checkpoints/res10_300x300_ssd_iter_140000.caffemodel',
-    )
-
-model = MaskDetectorTrainer()
-model.load_state_dict(torch.load('./checkpoints/weights-v0.ckpt')['state_dict'], strict=False)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
-model.eval()
-
 @torch.no_grad()
-def tagMask(model, fd_model, source, outputPath):
+def tagMask(outputPath=None):
+
+    print("[INFO] Loading model")
+    fd_model = FaceDetector(
+            prototype='./checkpoints/deploy.prototxt.txt',
+            model='./checkpoints/res10_300x300_ssd_iter_140000.caffemodel',
+        )
+
+    model = MaskDetectorTrainer()
+    model.load_state_dict(torch.load('./checkpoints/weights-v0.ckpt')['state_dict'], strict=False)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    model.eval()
+
     print("[INFO] Starting stream")
     vs = VideoStream(src=0).start()
     time.sleep(2)
 
+    transformations = Compose([
+        ToPILImage(),
+        Resize((100,100)),
+        ToTensor(),
+    ])
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    labels = ['No Mask', 'Mask']
+    labelColor = [(10,0,255), (10,255,0)]
+
     while True:
         frame = vs.read()
-        frame = imutils.resize(frame, width=400)
-
-        (h,w) = frame.shape[:2]
-        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300,300)), 1.0, (300,300), (104.0, 177.0, 123.0))
-
-        net.setInput(blob)
-        detections = net.forward()
-
-        for i in range(0, detections.shape[2]):
-            confidence = detections[0,0,i,2]
-            if confidence < 0.6:
-                continue
-
-            box = detections[0,0,i,3:7] * np.array([w,h,w,h])
-            (startX, startY, endX, endY) = box.astype("int")
-
-            text = "{:.2f}%".format(confidence * 100)
-            y = startY - 10 if startY - 10 > 10 else startY + 10
-            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
-            cv2.putText(frame, text, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0 , 0, 255), 2)
-
-        cv2.imshow("Frame", frame)
+        # frame = imutils.resize(frame, width=400)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        faces = fd_model.detect(frame)
+        for face in faces:
+            print(face)
+        
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        cv2.imshow('main', frame)
         key = cv2.waitKey(1) & 0xFF
+
         if key == ord("q"):
             break
-
+    
     cv2.destroyAllWindows()
     vs.stop()
+
+if __name__ == '__main__':
+    tagMask()

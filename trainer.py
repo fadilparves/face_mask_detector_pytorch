@@ -107,19 +107,20 @@ class MaskDetectorTrainer(pl.LightningModule):
         tensor_board_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
         return {'val_loss': avg_loss, 'log': tensor_board_logs}
 
-model = MaskDetectorTrainer(Path('./data/df_mask.pickle'))
+def train():
+    model = MaskDetectorTrainer(Path('./data/df_mask.pickle'))
 
-checkpoint_callback = ModelCheckpoint(
-    filepath='./checkpoints/weights',
-    save_weights_only=True,
-    monitor='val_acc',
-    mode='max',
-    verbose=True
-)
+    checkpoint_callback = ModelCheckpoint(
+        filepath='./checkpoints/weights',
+        save_weights_only=True,
+        monitor='val_acc',
+        mode='max',
+        verbose=True
+    )
 
-trainer = Trainer(gpus= 1 if torch.cuda.is_available() else 0,
-                  max_epochs=10,
-                  checkpoint_callback=checkpoint_callback,
-                  profiler=True)
+    trainer = Trainer(gpus= 1 if torch.cuda.is_available() else 0,
+                    max_epochs=10,
+                    checkpoint_callback=checkpoint_callback,
+                    profiler=True)
 
-trainer.fit(model)
+    trainer.fit(model)
