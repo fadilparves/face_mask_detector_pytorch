@@ -80,7 +80,7 @@ class MaskDetectorTrainer(pl.LightningModule):
     def configure_optimizers(self) -> Optimizer:
         return Adam(self.parameters(), lr=0.00001)
     
-    def training_step(self, batch:dict, _batch_idx: int) -> Dict[str, Tensor]:
+    def training_step(self, batch: dict, _batch_idx: int) -> Dict[str, Tensor]:
         inputs, labels = batch['image'], batch['mask']
         labels = labels.flatten()
         outputs = self.forward(inputs)
@@ -101,17 +101,18 @@ class MaskDetectorTrainer(pl.LightningModule):
 
         return {'val_loss': loss, 'val_acc': val_acc}
 
-    def validation_epoch_end(self, outputs: List[Dict[str, Tensor]]) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
-        tensor_board_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
-        return {'val_loss': avg_loss, 'log': tensor_board_logs}
+    # def validation_epoch_end(self, outputs: List[Dict[str, Tensor]]) -> Dict[str, str]:
+    #     avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+    #     avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
+    #     tensor_board_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
+    #     return {'val_loss': avg_loss, 'val_acc': avg_acc}
 
 def train():
     model = MaskDetectorTrainer(Path('./data/df_mask.pickle'))
 
     checkpoint_callback = ModelCheckpoint(
-        filepath='./checkpoints/weights',
+        dirpath='./checkpoints/',
+        filename='weights-{epoch:02d}-{val_acc:.2f}',
         save_weights_only=True,
         monitor='val_acc',
         mode='max',
@@ -121,6 +122,9 @@ def train():
     trainer = Trainer(gpus= 1 if torch.cuda.is_available() else 0,
                     max_epochs=10,
                     checkpoint_callback=checkpoint_callback,
-                    profiler=True)
+                    profiler=True, 
+                    num_sanity_val_steps=0)
 
     trainer.fit(model)
+
+train()

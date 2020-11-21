@@ -9,6 +9,7 @@ import torch
 from torchvision.transforms import Compose, Resize, ToPILImage, ToTensor
 from face_detector import FaceDetector
 from trainer import MaskDetectorTrainer
+from PIL import Image as im 
 
 @torch.no_grad()
 def tagMask(outputPath=None):
@@ -20,7 +21,7 @@ def tagMask(outputPath=None):
         )
 
     model = MaskDetectorTrainer()
-    model.load_state_dict(torch.load('./checkpoints/weights-v0.ckpt')['state_dict'], strict=False)
+    model.load_state_dict(torch.load('./checkpoints/weights-epoch=00-val_acc=0.96.ckpt')['state_dict'], strict=False)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     model.eval()
@@ -37,15 +38,29 @@ def tagMask(outputPath=None):
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     labels = ['No Mask', 'Mask']
-    labelColor = [(10,0,255), (10,255,0)]
+    labelColor = [(255,0,9), (10,255,0)]
+    boxColor = [(255,0,9), (10,255,0)]
 
     while True:
         frame = vs.read()
-        # frame = imutils.resize(frame, width=400)
+        frame = imutils.resize(frame, width=400)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         faces = fd_model.detect(frame)
         for face in faces:
-            print(face)
+            startX, startY, w, h = face
+
+            startX, startY = max(startX, 0), max(startY, 0)
+
+            faceImg = frame[startY:startY+h, startX:startX+w]
+            output = model(transformations(faceImg).unsqueeze(0).to(device))
+            _, predicted = torch.max(output.data, 1)
+            
+            cv2.rectangle(frame, (startX, startY), (startX + w, startY + h), boxColor[predicted], 2)
+
+            textSize = cv2.getTextSize(labels[predicted], font, 1, 2)[0]
+            textX = startX + w // 2 - textSize[0] // 2
+
+            cv2.putText(frame, labels[predicted], (textX, startY-20), font, 1, labelColor[predicted], 2)
         
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         cv2.imshow('main', frame)
