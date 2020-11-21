@@ -21,7 +21,7 @@ def tagMask(outputPath=None):
         )
 
     model = MaskDetectorTrainer()
-    model.load_state_dict(torch.load('./checkpoints/weights-epoch=00-val_acc=0.96.ckpt')['state_dict'], strict=False)
+    model.load_state_dict(torch.load('./checkpoints/weights-epoch=06-val_acc=1.00.ckpt')['state_dict'], strict=False)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     model.eval()
