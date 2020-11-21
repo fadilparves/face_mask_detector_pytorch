@@ -18,3 +18,14 @@ class TorchDataset(Dataset):
             Resize((100, 100))
             ToTensor()
         ])
+
+    def __getitem__(self, key):
+        row = self.df.iloc[key]
+        image = cv2.imdecode(np.fromfile(row['image'], dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+        return {
+            'image': self.transformations(row['image']),
+            'mask': tensor([row['mask']], dtype=long),
+        }
+
+    def __len__(self):
+        return len(self.df.index)
