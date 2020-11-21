@@ -110,7 +110,7 @@ class MaskDetectorTrainer(pl.LightningModule):
 model = MaskDetectorTrainer(Path('./data/df_mask.pickle'))
 
 checkpoint_callback = ModelCheckpoint(
-    filepath='./checkpoints/weights.ckpt',
+    filepath='./checkpoints/weights',
     save_weights_only=True,
     monitor='val_acc',
     mode='max',

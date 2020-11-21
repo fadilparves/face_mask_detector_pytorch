@@ -1,0 +1,6 @@
+cv2
+numpy
+pandas
+pytorch-lightning
+scikit-learn
+tqdm
