@@ -80,4 +80,11 @@ class MaskDetectorTrainer(pl.LightningModule):
     def configure_optimizers(self) -> Optimizer:
         return Adam(self.parameters(), lr=0.00001)
     
-    
+    def training_steps(self, batch:dict, _batch_idx: int) -> Dict[str, Tensor]:
+        inputs, labels = batch['image'], batch['mask']
+        labels = labels.flatten()
+        outputs = self.forward(inputs)
+        loss = self.cross_entropy_loss(outputs, labels)
+
+        tensor_board_logs = {'train_loss': loss}
+        return {'loss': loss, 'log': tensor_board_logs}
