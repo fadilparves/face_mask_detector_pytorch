@@ -15,7 +15,7 @@ from torch.optim import Adam
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
 
-from .torch_dataset import TorchDataset
+from torch_dataset import TorchDataset
 
 class MaskDetectorTrainer(pl.LightningModule):
     def __init__(self, mask_df_path: Path=None):
@@ -71,16 +71,16 @@ class MaskDetectorTrainer(pl.LightningModule):
         norm_weights = [1 - (x / sum(samples)) for x in samples]
         self.cross_entropy_loss = CrossEntropyLoss(weight=torch.tensor(norm_weights))
 
-    def train_loader(self) -> DataLoader:
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(self.train_df, batch_size=32, shuffle=True, num_workers=4)
 
-    def val_loader(self) -> DataLoader:
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(self.validate_df, batch_size=32, num_workers=4)
 
     def configure_optimizers(self) -> Optimizer:
         return Adam(self.parameters(), lr=0.00001)
     
-    def training_steps(self, batch:dict, _batch_idx: int) -> Dict[str, Tensor]:
+    def training_step(self, batch:dict, _batch_idx: int) -> Dict[str, Tensor]:
         inputs, labels = batch['image'], batch['mask']
         labels = labels.flatten()
         outputs = self.forward(inputs)
@@ -113,7 +113,8 @@ checkpoint_callback = ModelCheckpoint(
     filepath='./checkpoints/weights.ckpt',
     save_weights_only=True,
     monitor='val_acc',
-    mode='max'
+    mode='max',
+    verbose=True
 )
 
 trainer = Trainer(gpus= 1 if torch.cuda.is_available() else 0,

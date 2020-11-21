@@ -15,7 +15,7 @@ class TorchDataset(Dataset):
 
         self.transformations = Compose([
             ToPILImage(),
-            Resize((100, 100))
+            Resize((100, 100)),
             ToTensor()
         ])
 
