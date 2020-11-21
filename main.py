@@ -4,6 +4,12 @@ import argparse
 import imutils
 import time
 import cv2
+from pathlib import Path
+import torch
+from skvideo.io import FFmpegWriter, vreader
+from torchvision.transforms import Compose, Resize, ToPILImage, ToTensor
+from face_detector import FaceDetector
+from trainer import MaskDetectorTrainer
 
 print("[INFO] Loading model")
 net = cv2.dnn.readNetFromCaffe('./checkpoints/deploy.prototxt.txt', './checkpoints/res10_300x300_ssd_iter_140000.caffemodel')
@@ -34,3 +40,11 @@ while True:
         y = startY - 10 if startY - 10 > 10 else startY + 10
         cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
         cv2.putText(frame, text, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0 , 0, 255), 2)
+
+    cv2.imshow("Frame", frame)
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("q"):
+        break
+
+cv2.destroyAllWindows()
+vs.stop()
