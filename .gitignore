@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 self-built*
+lightning_logs
 # Distribution / packaging
 .Python
 build/
