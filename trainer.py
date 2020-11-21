@@ -88,3 +88,15 @@ class MaskDetectorTrainer(pl.LightningModule):
 
         tensor_board_logs = {'train_loss': loss}
         return {'loss': loss, 'log': tensor_board_logs}
+
+    def validation_step(self, batch: dict, _batch_idx: int) -> Dict[str, Tensor]:
+        inputs, labels = batch['image'], batch['mask']
+        labels = labels.flatten()
+        outputs = self.forward(inputs)
+        loss = self.cross_entropy_loss(outputs, labels)
+
+        _, outputs = torch.max(outputs, dim=1)
+        val_acc = accuracy_score(outputs.cpu(), labels.cpu())
+        val_acc = torch.tensor(val_acc)
+
+        return {'val_loss': loss, 'val_acc': val_acc}
