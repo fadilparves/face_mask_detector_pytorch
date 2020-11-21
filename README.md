@@ -1,1 +1,6 @@
-# face_mask_detector_pytorch
+# Face Mask Detection
+
+Model developed using Pytorch Lightning
+
+![Image]()
+
