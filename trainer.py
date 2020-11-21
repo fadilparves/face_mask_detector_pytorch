@@ -77,4 +77,7 @@ class MaskDetectorTrainer(pl.LightningModule):
     def val_loader(self) -> DataLoader:
         return DataLoader(self.validate_df, batch_size=32, num_workers=4)
 
+    def configure_optimizers(self) -> Optimizer:
+        return Adam(self.parameters(), lr=0.00001)
+    
     
