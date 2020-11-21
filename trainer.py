@@ -28,7 +28,7 @@ class MaskDetectorTrainer(pl.LightningModule):
             MaxPool2d(kernel_size=(2,2))
         )
 
-        self conv_layer_2 = conv_layer_2 = Sequential(
+        self.conv_layer_2 = conv_layer_2 = Sequential(
             Conv2d(32, 64, kernel_size=(3,3), padding=(1,1)),
             ReLU(),
             MaxPool2d(kernel_size=(2,2))
@@ -100,3 +100,25 @@ class MaskDetectorTrainer(pl.LightningModule):
         val_acc = torch.tensor(val_acc)
 
         return {'val_loss': loss, 'val_acc': val_acc}
+
+    def validation_epoch_end(self, outputs: List[Dict[str, Tensor]]) -> Dict[str, Union[Tensor, Dict[str, Tensor]]]:
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        avg_acc = torch.stack([x['val_acc'] for x in outputs]).mean()
+        tensor_board_logs = {'val_loss': avg_loss, 'val_acc': avg_acc}
+        return {'val_loss': avg_loss, 'log': tensor_board_logs}
+
+model = MaskDetectorTrainer(Path('./data/df_mask.pickle'))
+
+checkpoint_callback = ModelCheckpoint(
+    filepath='./checkpoints/weights.ckpt',
+    save_weights_only=True,
+    monitor='val_acc',
+    mode='max'
+)
+
+trainer = Trainer(gpus= 1 if torch.cuda.is_available() else 0,
+                  max_epochs=10,
+                  checkpoint_callback=checkpoint_callback,
+                  profiler=True)
+
+trainer.fit(model)
