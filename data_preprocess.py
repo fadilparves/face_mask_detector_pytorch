@@ -7,3 +7,9 @@ masked_path = dataset_path/'AFDB_masked_face_dataset'
 non_masked_path = dataset_path/'AFDB_face_dataset'
 df_mask = pd.DataFrame()
 
+for subject in tqdm(list(non_masked_path.iterdir()), desc='photos without mask'):
+    for img_path in subject.iterdir():
+        df_mask = df_mask.append({
+            'image': str(img_path),
+            'mask': 0
+        }, ignore_index=True)
