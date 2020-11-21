@@ -21,3 +21,4 @@ for subject in tqdm(list(masked_path.iterdir()), desc='photos with mask'):
             'mask': 1
         }, ignore_index=True)
 
+df_mask.to_pickle('/data/df_mask.pickle')
