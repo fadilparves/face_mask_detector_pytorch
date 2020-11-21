@@ -23,7 +23,7 @@ class TorchDataset(Dataset):
         row = self.df.iloc[key]
         image = cv2.imdecode(np.fromfile(row['image'], dtype=np.uint8), cv2.IMREAD_UNCHANGED)
         return {
-            'image': self.transformations(row['image']),
+            'image': self.transformations(image),
             'mask': tensor([row['mask']], dtype=long),
         }
 
