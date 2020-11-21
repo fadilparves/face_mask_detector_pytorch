@@ -50,3 +50,11 @@ class MaskDetectorTrainer(pl.LightningModule):
             for layer in sequential.children():
                 if isinstance(layer, (Linear, Conv2d)):
                     init.xavier_uniform_(layer.weight)
+
+    def forward(self, x: Tensor):
+        out = self.conv_layer_1(x)
+        out = self.conv_layer_2(out)
+        out = self.conv_layer_3(out)
+        out = out.view(-1, 2048)
+        out = self.linear_layer(out)
+        return out
