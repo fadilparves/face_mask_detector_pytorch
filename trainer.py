@@ -70,3 +70,11 @@ class MaskDetectorTrainer(pl.LightningModule):
         samples = [non_mask_num, mask_num]
         norm_weights = [1 - (x / sum(samples)) for x in samples]
         self.cross_entropy_loss = CrossEntropyLoss(weight=torch.tensor(norm_weights))
+
+    def train_loader(self) -> DataLoader:
+        return DataLoader(self.train_df, batch_size=32, shuffle=True, num_workers=4)
+
+    def val_loader(self) -> DataLoader:
+        return DataLoader(self.validate_df, batch_size=32, num_workers=4)
+
+    
